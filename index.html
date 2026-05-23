@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pixel Platform Adventure</title>
+
+<style>
+* {
+  box-sizing: border-box;
+  user-select: none;
+}
+
+body {
+  margin: 0;
+  background: #6ec6ff;
+  font-family: Arial, sans-serif;
+  text-align: center;
+  overflow: hidden;
+}
+
+h2 {
+  margin: 10px 0 2px;
+}
+
+p {
+  margin: 0 0 8px;
+}
+
+#game {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  height: 520px;
+  margin: auto;
+  overflow: hidden;
+  border: 4px solid #222;
+  background: linear-gradient(#63b7ff 0%, #bdefff 70%, #7bd85c 70%);
+}
+
+#world {
+  position: absolute;
+  width: 1800px;
+  height: 520px;
+}
+
+#hud {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  z-index: 20;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+  color: white;
+  text-shadow: 2px 2px #000;
+}
+
+.player {
+  position: absolute;
+  width: 28px;
+  height: 36px;
+  background: red;
+  border: 3px solid #111;
+  border-radius: 6px 6px 2px 2px;
+  z-index: 10;
+}
+
+.player::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  left: -4px;
+  width: 34px;
+  height: 12px;
+  background: #d90000;
+  border: 3px solid #111;
+  border-radius: 8px 8px 2px 2px;
+}
+
+.player::after {
+  content: "";
+  position: absolute;
+  top: 9px;
+  left: 6px;
+  width: 14px;
+  height: 10px;
+  background: #ffd29d;
+  border: 2px solid #111;
+}
+
+.platform {
+  position: absolute;
+  height: 32px;
+  background: repeating-linear-gradient(
+    45deg,
+    #9b5a2e,
+    #9b5a2e 8px,
+    #7a3f1d 8px,
+    #7a3f1d 16px
+  );
+  border: 3px solid #3b1d0c;
+}
+
+.block {
+  position: absolute;
+  width: 36px;
+  height: 36px;
+  background: #d98228;
+  border: 3px solid #4a250c;
+  box-shadow: inset -4px -4px #a95618;
+}
+
+.coin {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  background: gold;
+  border: 3px solid #b8860b;
+  border-radius: 50%;
+  box-shadow: 0 0 8px gold;
+}
+
+.enemy {
+  position: absolute;
+  width: 30px;
+  height: 26px;
+  background: #8b4513;
+  border: 3px solid #111;
+  border-radius: 50% 50% 5px 5px;
+}
+
+.enemy::before,
+.enemy::after {
+  content: "";
+  position: absolute;
+  top: 6px;
+  width: 5px;
+  height: 5px;
+  background: black;
+  border-radius: 50%;
+}
+
+.enemy::before {
+  left: 7px;
+}
+
+.enemy::after {
+  right: 7px;
+}
+
+.flag {
+  position: absolute;
+  width: 12px;
+  height: 110px;
+  background: #222;
+}
+
+.flag::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 12px;
+  width: 55px;
+  height: 35px;
+  background: limegreen;
+  border: 3px solid #111;
+}
+
+.cloud {
+  position: absolute;
+  width: 80px;
+  height: 30px;
+  background: white;
+  border-radius: 30px;
+  opacity: 0.9;
+}
+
+.cloud::before,
+.cloud::after {
+  content: "";
+  position: absolute;
+  background: white;
+  border-radius: 50%;
+}
+
+.cloud::before {
+  width: 35px;
+  height: 35px;
+  top: -18px;
+  left: 12px;
+}
+
+.cloud::after {
+  width: 42px;
+  height: 42px;
+  top: -24px;
+  right: 10px;
+}
+
+#overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.65);
+  color: white;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-shadow: 2px 2px #000;
+}
+
+#overlay button,
+.controls button {
+  padding: 12px 18px;
+  margin: 5px;
+  font-size: 18px;
+  border: 3px solid #111;
+  background: #ffd447;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.controls {
+  margin-top: 8px;
+}
+
+.controls button {
+  width: 75px;
+}
+
+@media (max-width: 480px) {
+  h2, p {
+    display: none;
+  }
+
+  #game {
+    height: 78vh;
+  }
+
+  #world {
+    height: 78vh;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<h2>🍄 Pixel Platform Adventure</h2>
+<p>Collect coins, avoid enemies, and reach the flag!</p>
+
+<div id="game">
+  <div id="hud">
+    <span id="scoreText">Coins: 0</span>
+    <span id="livesText">Lives: 3</span>
+  </div>
+
+  <div id="world">
+    <div class="cloud" style="left:100px; top:80px;"></div>
+    <div class="cloud" style="left:480px; top:50px;"></div>
+    <div class="cloud" style="left:900px; top:100px;"></div>
+    <div class="cloud" style="left:1300px; top:70px;"></div>
+
+    <div id="player" class="player"></div>
+  </div>
+
+  <div id="overlay">
+    <h1>PIXEL PLATFORM ADVENTURE</h1>
+    <p>Arrow keys / buttons to move. Space to jump.</p>
+    <button onclick="startGame()">Start Game</button>
+  </div>
+</div>
+
+<div class="controls">
+  <button id="leftBtn">⬅️</button>
+  <button id="jumpBtn">⬆️</button>
+  <button id="rightBtn">➡️</button>
+</div>
+
+<script>
+const game = document.getElementById("game");
+const world = document.getElementById("world");
+const player = document.getElementById("player");
+const overlay = document.getElementById("overlay");
+const scoreText = document.getElementById("scoreText");
+const livesText = document.getElementById("livesText");
+
+let x, y, vx, vy;
+let cameraX = 0;
+let coins = 0;
+let lives = 3;
+let onGround = false;
+let running = false;
+
+let leftPressed = false;
+let rightPressed = false;
+
+const gravity = 0.6;
+const moveSpeed = 4;
+const jumpPower = -12;
+const playerW = 28;
+const playerH = 36;
+const worldW = 1800;
+
+let platforms = [
+  {x:0, y:460, w:500, h:32},
+  {x:570, y:460, w:350, h:32},
+  {x:1010, y:460, w:380, h:32},
+  {x:1480, y:460, w:320, h:32},
+
+  {x:180, y:360, w:110, h:24},
+  {x:380, y:300, w:120, h:24},
+  {x:680, y:350, w:110, h:24},
+  {x:860, y:280, w:120, h:24},
+  {x:1130, y:340, w:120, h:24},
+  {x:1320, y:270, w:130, h:24}
+];
+
+let blocks = [
+  {x:260, y:260},
+  {x:720, y:250},
+  {x:1180, y:240}
+];
+
+let coinList = [
+  {x:210, y:320, taken:false},
+  {x:400, y:260, taken:false},
+  {x:455, y:260, taken:false},
+  {x:730, y:215, taken:false},
+  {x:880, y:240, taken:false},
+  {x:1160, y:305, taken:false},
+  {x:1350, y:230, taken:false},
+  {x:1560, y:420, taken:false},
+  {x:1620, y:420, taken:false}
+];
+
+let enemies = [
+  {x:620, y:434, vx:1.4, min:570, max:880, alive:true},
+  {x:1080, y:434, vx:1.7, min:1010, max:1370, alive:true}
+];
+
+let flag = {x:1710, y:350, w:12, h:110};
+
+function startGame() {
+  x = 50;
+  y = 390;
+  vx = 0;
+  vy = 0;
+  cameraX = 0;
+  coins = 0;
+  lives = 3;
+  running = true;
+
+  coinList.forEach(c => c.taken = false);
+  enemies.forEach(e => e.alive = true);
+
+  overlay.style.display = "none";
+  drawLevel();
+  loop();
+}
+
+function drawLevel() {
+  document.querySelectorAll(".platform,.block,.coin,.enemy,.flag").forEach(e => e.remove());
+
+  platforms.forEach(p => {
+    const el = document.createElement("div");
+    el.className = "platform";
+    el.style.left = p.x + "px";
+    el.style.top = p.y + "px";
+    el.style.width = p.w + "px";
+    el.style.height = p.h + "px";
+    world.appendChild(el);
+  });
+
+  blocks.forEach(b => {
+    const el = document.createElement("div");
+    el.className = "block";
+    el.style.left = b.x + "px";
+    el.style.top = b.y + "px";
+    world.appendChild(el);
+  });
+
+  coinList.forEach(c => {
+    if (!c.taken) {
+      const el = document.createElement("div");
+      el.className = "coin";
+      el.style.left = c.x + "px";
+      el.style.top = c.y + "px";
+      world.appendChild(el);
+    }
+  });
+
+  enemies.forEach(e => {
+    if (e.alive) {
+      const el = document.createElement("div");
+      el.className = "enemy";
+      el.style.left = e.x + "px";
+      el.style.top = e.y + "px";
+      world.appendChild(el);
+    }
+  });
+
+  const f = document.createElement("div");
+  f.className = "flag";
+  f.style.left = flag.x + "px";
+  f.style.top = flag.y + "px";
+  world.appendChild(f);
+}
+
+function jump() {
+  if (onGround) {
+    vy = jumpPower;
+    onGround = false;
+  }
+}
+
+function rectHit(a, b) {
+  return (
+    a.x < b.x + b.w &&
+    a.x + a.w > b.x &&
+    a.y < b.y + b.h &&
+    a.y + a.h > b.y
+  );
+}
+
+function update() {
+  if (!running) return;
+
+  vx = 0;
+  if (leftPressed) vx = -moveSpeed;
+  if (rightPressed) vx = moveSpeed;
+
+  x += vx;
+  if (x < 0) x = 0;
+  if (x > worldW - playerW) x = worldW - playerW;
+
+  vy += gravity;
+  y += vy;
+  onGround = false;
+
+  const playerBox = {x, y, w: playerW, h: playerH};
+
+  platforms.forEach(p => {
+    if (rectHit(playerBox, p)) {
+      if (vy >= 0 && y + playerH - vy <= p.y) {
+        y = p.y - playerH;
+        vy = 0;
+        onGround = true;
+      }
+    }
+  });
+
+  blocks.forEach(b => {
+    const blockBox = {x:b.x, y:b.y, w:36, h:36};
+
+    if (rectHit({x, y, w:playerW, h:playerH}, blockBox)) {
+      if (vy < 0 && y >= b.y + 20) {
+        vy = 2;
+      } else if (vy >= 0 && y + playerH - vy <= b.y) {
+        y = b.y - playerH;
+        vy = 0;
+        onGround = true;
+      }
+    }
+  });
+
+  coinList.forEach(c => {
+    if (!c.taken && rectHit({x, y, w:playerW, h:playerH}, {x:c.x, y:c.y, w:18, h:18})) {
+      c.taken = true;
+      coins++;
+    }
+  });
+
+  enemies.forEach(e => {
+    if (!e.alive) return;
+
+    e.x += e.vx;
+
+    if (e.x < e.min || e.x > e.max) {
+      e.vx *= -1;
+    }
+
+    if (rectHit({x, y, w:playerW, h:playerH}, {x:e.x, y:e.y, w:30, h:26})) {
+      if (vy > 0 && y + playerH < e.y + 15) {
+        e.alive = false;
+        vy = -8;
+        coins += 2;
+      } else {
+        loseLife();
+      }
+    }
+  });
+
+  if (rectHit({x, y, w:playerW, h:playerH}, flag)) {
+    winGame();
+  }
+
+  if (y > 560) {
+    loseLife();
+  }
+
+  cameraX = x - game.clientWidth / 2;
+  if (cameraX < 0) cameraX = 0;
+  if (cameraX > worldW - game.clientWidth) cameraX = worldW - game.clientWidth;
+
+  world.style.transform = `translateX(${-cameraX}px)`;
+  player.style.left = x + "px";
+  player.style.top = y + "px";
+
+  scoreText.textContent = "Coins: " + coins;
+  livesText.textContent = "Lives: " + lives;
+
+  drawLevel();
+}
+
+function loseLife() {
+  lives--;
+
+  if (lives <= 0) {
+    gameOver();
+    return;
+  }
+
+  x = 50;
+  y = 390;
+  vx = 0;
+  vy = 0;
+}
+
+function gameOver() {
+  running = false;
+  overlay.innerHTML = `
+    <h1>GAME OVER</h1>
+    <p>Coins Collected: ${coins}</p>
+    <button onclick="startGame()">Try Again</button>
+  `;
+  overlay.style.display = "flex";
+}
+
+function winGame() {
+  running = false;
+  overlay.innerHTML = `
+    <h1>LEVEL COMPLETE!</h1>
+    <p>You collected ${coins} coins.</p>
+    <button onclick="startGame()">Play Again</button>
+  `;
+  overlay.style.display = "flex";
+}
+
+function loop() {
+  update();
+  if (running) requestAnimationFrame(loop);
+}
+
+document.addEventListener("keydown", e => {
+  if (e.key === "ArrowLeft") leftPressed = true;
+  if (e.key === "ArrowRight") rightPressed = true;
+  if (e.key === " " || e.key === "ArrowUp") jump();
+});
+
+document.addEventListener("keyup", e => {
+  if (e.key === "ArrowLeft") leftPressed = false;
+  if (e.key === "ArrowRight") rightPressed = false;
+});
+
+function holdButton(button, actionStart, actionEnd) {
+  button.addEventListener("touchstart", e => {
+    e.preventDefault();
+    actionStart();
+  });
+
+  button.addEventListener("touchend", e => {
+    e.preventDefault();
+    actionEnd();
+  });
+
+  button.addEventListener("mousedown", actionStart);
+  button.addEventListener("mouseup", actionEnd);
+  button.addEventListener("mouseleave", actionEnd);
+}
+
+holdButton(document.getElementById("leftBtn"), () => leftPressed = true, () => leftPressed = false);
+holdButton(document.getElementById("rightBtn"), () => rightPressed = true, () => rightPressed = false);
+
+document.getElementById("jumpBtn").addEventListener("click", jump);
+document.getElementById("jumpBtn").addEventListener("touchstart", e => {
+  e.preventDefault();
+  jump();
+});
+</script>
+
+</body>
+</html>
