@@ -59,36 +59,16 @@ p {
 
 .player {
   position: absolute;
-  width: 28px;
-  height: 36px;
-  background: red;
-  border: 3px solid #111;
-  border-radius: 6px 6px 2px 2px;
+  width: 50px;
+  height: 50px;
+  background-image: url('jems.png');
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
   z-index: 10;
 }
+  
 
-.player::before {
-  content: "";
-  position: absolute;
-  top: -10px;
-  left: -4px;
-  width: 34px;
-  height: 12px;
-  background: #d90000;
-  border: 3px solid #111;
-  border-radius: 8px 8px 2px 2px;
-}
-
-.player::after {
-  content: "";
-  position: absolute;
-  top: 9px;
-  left: 6px;
-  width: 14px;
-  height: 10px;
-  background: #ffd29d;
-  border: 2px solid #111;
-}
 
 .platform {
   position: absolute;
@@ -301,8 +281,8 @@ let rightPressed = false;
 const gravity = 0.6;
 const moveSpeed = 4;
 const jumpPower = -12;
-const playerW = 28;
-const playerH = 36;
+const playerW = 50;
+const playerH = 50;
 const worldW = 1800;
 
 let platforms = [
@@ -346,7 +326,7 @@ let flag = {x:1710, y:350, w:12, h:110};
 
 function startGame() {
   x = 50;
-  y = 390;
+  y = 360;
   vx = 0;
   vy = 0;
   cameraX = 0;
