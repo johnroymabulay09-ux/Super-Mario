@@ -264,8 +264,8 @@ let rightPressed = false;
 const gravity = 0.6;
 const moveSpeed = 4;
 const jumpPower = -12;
-const playerW = 150;
-const playerH = 150;
+const playerW = 75;
+const playerH = 75;
 const worldW = 1800;
 
 let platforms = [
@@ -301,15 +301,15 @@ let coinList = [
 ];
 
 let enemies = [
-  {x:620, y:434, vx:1.4, min:570, max:880, alive:true},
-  {x:1080, y:434, vx:1.7, min:1010, max:1370, alive:true}
+  {x:620, y:370, vx:1.4, min:570, max:880, alive:true},
+  {x:1080, y:370, vx:1.7, min:1010, max:1370, alive:true}
 ];
 
 let flag = {x:1710, y:350, w:12, h:110};
 
 function startGame() {
   x = 50;
-  y = 250;
+  y = 350;
   vx = 0;
   vy = 0;
   cameraX = 0;
